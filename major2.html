@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Study Resource Sharing Platform</title>
+
+<style>
+body {
+  font-family: Arial;
+  margin: 0;
+  background: #f4f6f9;
+}
+
+header {
+  background: #2c3e50;
+  color: white;
+  padding: 15px;
+  text-align: center;
+}
+
+.container {
+  padding: 20px;
+}
+
+input, select, textarea {
+  width: 100%;
+  padding: 8px;
+  margin: 5px 0;
+}
+
+button {
+  padding: 10px;
+  background: #3498db;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #2980b9;
+}
+
+.card {
+  background: white;
+  padding: 15px;
+  margin: 10px 0;
+  border-radius: 5px;
+}
+
+.hidden {
+  display: none;
+}
+
+.nav {
+  background: #34495e;
+  padding: 10px;
+  text-align: center;
+}
+
+.nav button {
+  margin: 5px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<h2>📚 Study Resource Sharing Platform</h2>
+</header>
+
+<div class="nav hidden" id="navBar">
+<button onclick="showSection('upload')">Upload</button>
+<button onclick="showSection('browse')">Browse</button>
+<button onclick="logout()">Logout</button>
+</div>
+
+<div class="container">
+
+<!-- LOGIN -->
+<div id="loginSection">
+<h3>Login</h3>
+<input type="text" id="loginUser" placeholder="Username">
+<input type="password" id="loginPass" placeholder="Password">
+<button onclick="login()">Login</button>
+
+<h3>Signup</h3>
+<input type="text" id="signupUser" placeholder="Username">
+<input type="password" id="signupPass" placeholder="Password">
+<button onclick="signup()">Signup</button>
+</div>
+
+<!-- UPLOAD -->
+<div id="uploadSection" class="hidden">
+<h3>Upload Resource</h3>
+
+<input type="text" id="title" placeholder="Title">
+<input type="text" id="subject" placeholder="Subject">
+<textarea id="description" placeholder="Description"></textarea>
+<input type="file" id="fileInput">
+<input type="text" id="link" placeholder="OR Paste Resource Link">
+
+<button onclick="uploadResource()">Upload</button>
+</div>
+
+<!-- BROWSE -->
+<div id="browseSection" class="hidden">
+<h3>Browse Resources</h3>
+
+<input type="text" id="search" placeholder="Search by subject..." onkeyup="displayResources()">
+
+<div id="resourceList"></div>
+</div>
+
+</div>
+
+<script>
+let users = JSON.parse(localStorage.getItem("users")) || [];
+let resources = JSON.parse(localStorage.getItem("resources")) || [];
+let currentUser = null;
+
+// SIGNUP
+function signup() {
+  let user = document.getElementById("signupUser").value;
+  let pass = document.getElementById("signupPass").value;
+
+  if(user && pass) {
+    users.push({user, pass, role: user === "admin" ? "admin" : "user"});
+    localStorage.setItem("users", JSON.stringify(users));
+    alert("Signup successful!");
+  }
+}
+
+// LOGIN
+function login() {
+  let user = document.getElementById("loginUser").value;
+  let pass = document.getElementById("loginPass").value;
+
+  let found = users.find(u => u.user === user && u.pass === pass);
+
+  if(found) {
+    currentUser = found;
+    document.getElementById("loginSection").classList.add("hidden");
+    document.getElementById("navBar").classList.remove("hidden");
+    showSection("upload");
+  } else {
+    alert("Invalid login!");
+  }
+}
+
+// LOGOUT
+function logout() {
+  currentUser = null;
+  location.reload();
+}
+
+// SHOW SECTIONS
+function showSection(section) {
+  document.getElementById("uploadSection").classList.add("hidden");
+  document.getElementById("browseSection").classList.add("hidden");
+
+  if(section === "upload") {
+    document.getElementById("uploadSection").classList.remove("hidden");
+  } else {
+    document.getElementById("browseSection").classList.remove("hidden");
+    displayResources();
+  }
+}
+
+// UPLOAD RESOURCE
+function uploadResource() {
+  let title = document.getElementById("title").value;
+  let subject = document.getElementById("subject").value;
+  let description = document.getElementById("description").value;
+  let file = document.getElementById("fileInput").files[0];
+  let link = document.getElementById("link").value;
+
+  if(title && subject) {
+    let resource = {
+      title,
+      subject,
+      description,
+      fileName: file ? file.name : null,
+      link,
+      uploadedBy: currentUser.user
+    };
+
+    resources.push(resource);
+    localStorage.setItem("resources", JSON.stringify(resources));
+
+    alert("Uploaded successfully!");
+    document.getElementById("uploadSection").reset;
+  }
+}
+
+// DISPLAY RESOURCES
+function displayResources() {
+  let search = document.getElementById("search").value.toLowerCase();
+  let list = document.getElementById("resourceList");
+
+  list.innerHTML = "";
+
+  resources
+    .filter(r => r.subject.toLowerCase().includes(search))
+    .forEach((r, index) => {
+      let div = document.createElement("div");
+      div.className = "card";
+
+      div.innerHTML = `
+        <h4>${r.title}</h4>
+        <p><b>Subject:</b> ${r.subject}</p>
+        <p>${r.description}</p>
+        ${r.fileName ? `<p>📄 File: ${r.fileName}</p>` : ""}
+        ${r.link ? `<a href="${r.link}" target="_blank">Open Link</a>` : ""}
+        <p>Uploaded by: ${r.uploadedBy}</p>
+        ${currentUser.role === "admin" ? `<button onclick="deleteResource(${index})">Delete</button>` : ""}
+      `;
+
+      list.appendChild(div);
+    });
+}
+
+// DELETE RESOURCE (ADMIN)
+function deleteResource(index) {
+  resources.splice(index, 1);
+  localStorage.setItem("resources", JSON.stringify(resources));
+  displayResources();
+}
+</script>
+
+</body>
+</html>
