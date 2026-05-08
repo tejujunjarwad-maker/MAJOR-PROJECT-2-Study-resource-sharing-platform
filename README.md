@@ -1,0 +1,2 @@
+# MAJOR-PROJECT-2-Study-resource-sharing-platform
+The Study Resource Sharing Platform is a web application where students can upload, share, and download study materials like notes, PDFs, and useful links. It includes user login, resource management, search by subject, and admin controls. The platform encourages collaborative learning and provides easy access to educational resources for students.
